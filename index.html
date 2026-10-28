@@ -14,16 +14,28 @@
 </head>
 <body>
 <div class="app">
-<header class="top"><div class="brand"><div class="logo">🎸</div><div><h1>Músico Pro</h1><p>Teu repertório na palma da mão</p></div><div class="status" id="saveStatus">● Salvo no aparelho</div></div><div class="progress"><span id="progressBar"></span></div></header>
+<header class="top"><div class="brand"><div class="logo">🎸</div><div><h1>Músico Pro</h1><p>Teu repertório na palma da mão</p></div><div class="status" id="saveStatus">● Entrar para sincronizar</div></div><div class="progress"><span id="progressBar"></span></div></header>
 <main class="main">
-<section id="libraryView">
+<section id="authView">
+<div class="empty" style="text-align:left;border-style:solid;margin-top:10px">
+<h2 style="margin:0 0 8px">Sincronizar teu repertório</h2>
+<p class="note">Entra com a conta criada no Supabase para usar as mesmas músicas no celular e no notebook.</p>
+<form id="loginForm" class="formgrid" style="margin-top:14px">
+<label>E-mail<input class="field" id="loginEmail" type="email" autocomplete="username" required placeholder="teu e-mail"></label>
+<label>Senha<input class="field" id="loginPassword" type="password" autocomplete="current-password" required placeholder="Senha da conta Supabase"></label>
+<button class="btn primary" id="loginBtn" type="submit">Entrar e sincronizar</button>
+</form>
+<p id="authMessage" class="note" role="status">Usa o e-mail e a senha do usuário que criaste em Authentication → Users.</p>
+</div>
+</section>
+<section id="libraryView" class="hidden">
 <div class="searchrow"><input id="search" class="field" placeholder="Buscar música ou artista…" autocomplete="off"><button class="btn" id="backupBtn" title="Exportar backup">Backup</button></div>
-<div class="actions"><button class="btn primary" id="addBtn">＋ Adicionar música</button><label class="btn filelabel">⇧ Importar arquivo<input type="file" id="importFile" accept=".txt,.pro,.cho,.chordpro,.pdf,.mp3,.m4a,.wav,.ogg,.json" multiple></label></div>
+<div class="actions"><button class="btn primary" id="addBtn">＋ Adicionar música</button><button class="btn" id="syncBtn">↻ Sincronizar agora</button><button class="btn ghost" id="logoutBtn">Sair da conta</button><label class="btn filelabel">⇧ Importar arquivo<input type="file" id="importFile" accept=".txt,.pro,.cho,.chordpro,.pdf,.mp3,.m4a,.wav,.ogg,.json" multiple></label></div>
 <div class="sectionhead"><h2>Meu repertório</h2><span class="pill" id="songCount">0 músicas</span></div>
 <div class="setlistbar"><button class="btn" id="playSelectedBtn">▶ Tocar repertório selecionado (0)</button><button class="btn ghost" id="clearSelectedBtn">Limpar seleção</button></div>
 <p class="note">Marca as caixinhas das músicas que queres tocar como um bloco. A ordem será a ordem em que selecionares as músicas.</p>
 <div class="songlist" id="songList"></div>
-<div class="note">Os dados ficam salvos neste aparelho. A sincronização na nuvem será conectada numa próxima etapa. Faça backups para proteger seu repertório.</div>
+<div class="note">As músicas e a ordem do repertório selecionado são sincronizadas pela nuvem quando estiveres conectado. Mantém o Backup como proteção.</div>
 </section>
 <section id="readerView" class="hidden">
 <div class="readerhead"><button class="btn small" id="backBtn">← Voltar</button><h2 id="readerTitle">Cifra</h2><button class="iconbtn" id="favoriteBtn" title="Favoritar">☆</button></div>
@@ -40,7 +52,7 @@
 <div class="note">Dica: as músicas aparecem uma após a outra. Rola para baixo para passar à próxima sem tocar em nenhum botão. A rolagem automática também percorre toda a sequência.</div>
 </section>
 </main>
-<footer class="footer">Músico Pro · versão inicial offline</footer>
+<footer class="footer">Músico Pro · sincronização Supabase</footer>
 </div>
 <div class="modal hidden" id="songModal"><div class="modalbox"><h2 id="modalTitle">Adicionar música</h2><form id="songForm" class="formgrid">
 <input type="hidden" id="songId">
@@ -51,18 +63,35 @@
 <label class="filelabel btn">＋ Anexar PDF ou áudio<input type="file" id="songAttachment" accept=".pdf,.mp3,.m4a,.wav,.ogg,.txt,.pro,.cho,.chordpro"></label><div id="attachmentName" class="muted"></div>
 <div class="formbuttons"><button type="button" class="btn" id="cancelModal">Cancelar</button><button type="submit" class="btn primary">Salvar música</button></div>
 </form></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL='https://ynvsubegqjwsypxcvzmb.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_pqEJINLbqRmZLI0KL2tndg_g_KNYsQq';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const $=id=>document.getElementById(id);
 const DBKEY='musicopro.songs.v1';
 let songs=[], currentId=null, autoTimer=null, speed=1, fontSize=20, transpose=0, attachmentPending=null, selectedIds=[];
+let currentUser=null, cloudSongIds=new Set(), cloudSyncBusy=false, localDirty=false, lastCloudSnapshot='', syncTimer=null;
 const PICKKEY='musicopro.setlist.v1';
 try{selectedIds=JSON.parse(localStorage.getItem(PICKKEY)||'[]')}catch(e){selectedIds=[]}
-function savePicks(){selectedIds=selectedIds.filter(id=>songs.some(s=>s.id===id));try{localStorage.setItem(PICKKEY,JSON.stringify(selectedIds))}catch(e){} updatePickControls()}
+function savePicks(){selectedIds=selectedIds.filter(id=>songs.some(s=>s.id===id));songs.forEach(s=>s._selectedOrder=selectedIds.indexOf(s.id));try{localStorage.setItem(PICKKEY,JSON.stringify(selectedIds))}catch(e){} updatePickControls();if(currentUser)queueCloudSync()}
 function updatePickControls(){$('playSelectedBtn').textContent=`▶ Tocar repertório selecionado (${selectedIds.length})`; $('playSelectedBtn').disabled=selectedIds.length===0; $('clearSelectedBtn').disabled=selectedIds.length===0}
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const FLAT={'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
+
+function cloudData(song){const copy={...song};delete copy.attachmentData;copy._attachmentNotSynced=!!song.attachmentData;return copy}
+function applyCloudRows(rows){const localMap=new Map(songs.map(s=>[s.id,s]));const incoming=rows.map(r=>{const cloud={...r.song_data,id:r.id};const local=localMap.get(cloud.id);if(local?.attachmentData&&!cloud.attachmentData){cloud.attachmentData=local.attachmentData;cloud.attachmentName=local.attachmentName||cloud.attachmentName;cloud.attachmentType=local.attachmentType||cloud.attachmentType}return cloud});cloudSongIds=new Set(rows.map(r=>r.id));songs=incoming;selectedIds=songs.filter(s=>Number.isInteger(s._selectedOrder)&&s._selectedOrder>=0).sort((a,b)=>a._selectedOrder-b._selectedOrder).map(s=>s.id);songs.forEach(s=>{if(!Number.isInteger(s._selectedOrder))s._selectedOrder=-1});try{localStorage.setItem(DBKEY,JSON.stringify(songs));localStorage.setItem(PICKKEY,JSON.stringify(selectedIds))}catch(e){}renderList();updatePickControls();lastCloudSnapshot=JSON.stringify(rows.map(r=>({id:r.id,data:r.song_data,updated_at:r.updated_at})));}
+async function fetchCloudRows(){if(!currentUser)throw new Error('Entra na tua conta primeiro.');const {data,error}=await supabaseClient.from('user_songs').select('id,song_data,updated_at').eq('user_id',currentUser.id);if(error)throw error;return data||[]}
+function queueCloudSync(){if(!currentUser)return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncLocalToCloud(),700)}
+async function syncLocalToCloud(){if(!currentUser||cloudSyncBusy)return;cloudSyncBusy=true;try{const remote=await fetchCloudRows();const localIds=new Set(songs.map(s=>s.id));const removed=remote.filter(r=>!localIds.has(r.id)).map(r=>r.id);if(removed.length){const {error}=await supabaseClient.from('user_songs').delete().eq('user_id',currentUser.id).in('id',removed);if(error)throw error}const payload=songs.map(s=>({id:String(s.id),user_id:currentUser.id,song_data:cloudData(s),updated_at:new Date().toISOString()}));if(payload.length){const {error}=await supabaseClient.from('user_songs').upsert(payload,{onConflict:'user_id,id'});if(error)throw error}const rows=await fetchCloudRows();cloudSongIds=new Set(rows.map(r=>r.id));lastCloudSnapshot=JSON.stringify(rows.map(r=>({id:r.id,data:r.song_data,updated_at:r.updated_at})));localDirty=false;$('saveStatus').textContent='● Sincronizado';}catch(e){$('saveStatus').textContent='⚠ Erro de sincronização';console.error(e);$('authMessage').textContent='Não foi possível sincronizar: '+(e.message||'confere a tabela e as permissões no Supabase.');}finally{cloudSyncBusy=false}}
+async function refreshFromCloud(){if(!currentUser||cloudSyncBusy||localDirty)return;try{const rows=await fetchCloudRows();const snap=JSON.stringify(rows.map(r=>({id:r.id,data:r.song_data,updated_at:r.updated_at})));if(snap!==lastCloudSnapshot){applyCloudRows(rows);$('saveStatus').textContent='● Atualizado pela nuvem'}}catch(e){console.error(e)}}
+async function finishLogin(user){currentUser=user;$('authView').classList.add('hidden');$('libraryView').classList.remove('hidden');$('authMessage').textContent='Conectado.';try{const rows=await fetchCloudRows();const cloudSongs=rows.map(r=>({...r.song_data,id:r.id}));const localMap=new Map(songs.map(s=>[s.id,s]));const map=new Map(localMap);cloudSongs.forEach(s=>{const local=localMap.get(s.id);if(local?.attachmentData&&!s.attachmentData){s.attachmentData=local.attachmentData;s.attachmentName=local.attachmentName||s.attachmentName;s.attachmentType=local.attachmentType||s.attachmentType}map.set(s.id,s)});songs=Array.from(map.values());const picks=songs.filter(s=>Number.isInteger(s._selectedOrder)&&s._selectedOrder>=0).sort((a,b)=>a._selectedOrder-b._selectedOrder).map(s=>s.id);if(picks.length)selectedIds=picks;songs.forEach(s=>{if(!Number.isInteger(s._selectedOrder))s._selectedOrder=selectedIds.indexOf(s.id)});try{localStorage.setItem(DBKEY,JSON.stringify(songs));localStorage.setItem(PICKKEY,JSON.stringify(selectedIds))}catch(e){}renderList();updatePickControls();await syncLocalToCloud();$('authMessage').textContent='Sincronização ativa para '+user.email;setInterval(refreshFromCloud,12000)}catch(e){$('saveStatus').textContent='⚠ Erro de sincronização';$('authMessage').textContent='Login realizado, mas a sincronização falhou: '+(e.message||'verifica as permissões da tabela user_songs.');console.error(e)}}
+$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginBtn').disabled=true;$('authMessage').textContent='Entrando…';const {data,error}=await supabaseClient.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});$('loginBtn').disabled=false;if(error){$('authMessage').textContent='Não consegui entrar: '+error.message;return}await finishLogin(data.user)};
+$('logoutBtn').onclick=async()=>{await supabaseClient.auth.signOut();currentUser=null;$('libraryView').classList.add('hidden');$('authView').classList.remove('hidden');$('saveStatus').textContent='● Saiu da conta'};
+$('syncBtn').onclick=async()=>{if(!currentUser){alert('Entra na conta primeiro.');return}await syncLocalToCloud();await refreshFromCloud()};
+supabaseClient.auth.getSession().then(async({data,error})=>{if(error){$('authMessage').textContent=error.message;return}if(data.session)await finishLogin(data.session.user)});
 function load(){try{songs=JSON.parse(localStorage.getItem(DBKEY)||'[]')}catch(e){songs=[]}renderList()}
-function save(){try{localStorage.setItem(DBKEY,JSON.stringify(songs));$('saveStatus').textContent='● Salvo no aparelho';}catch(e){$('saveStatus').textContent='⚠ Armazenamento cheio';alert('O armazenamento do aparelho está cheio. Exporte um backup e remova anexos grandes.')}renderList()}
+function save(){try{localStorage.setItem(DBKEY,JSON.stringify(songs));if(currentUser){$('saveStatus').textContent='● Salvo; sincronizando…';localDirty=true;queueCloudSync()}else{$('saveStatus').textContent='● Salvo no aparelho (sem login)';}}catch(e){$('saveStatus').textContent='⚠ Armazenamento cheio';alert('O armazenamento do aparelho está cheio. Exporte um backup e remova anexos grandes.')}renderList()}
 function uid(){return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function renderList(){const q=$('search').value.toLowerCase();const list=songs.filter(s=>(s.name+' '+(s.artist||'')+' '+(s.set||'')).toLowerCase().includes(q)).sort((a,b)=>(a.name||'').localeCompare(b.name||''));$('songCount').textContent=`${songs.length} ${songs.length===1?'música':'músicas'}`;const root=$('songList');root.innerHTML='';if(!list.length){root.innerHTML='<div class="empty"><b>Teu repertório começa aqui 🎶</b>Adiciona uma cifra ou importa um arquivo para começar.</div>';updatePickControls();return}list.forEach(s=>{const el=document.createElement('div');el.className='song';el.innerHTML=`<input class="pick" type="checkbox" title="Selecionar para repertório" aria-label="Selecionar ${s.name}"><div class="songicon">♫</div><div class="songinfo"><strong></strong><small></small></div><button class="iconbtn fav" title="Favoritar">${s.favorite?'★':'☆'}</button><button class="iconbtn edit" title="Editar">✎</button><button class="iconbtn open" title="Abrir cifra">›</button><button class="iconbtn delete" title="Excluir música" aria-label="Excluir música">🗑</button>`;const pick=el.querySelector('.pick');pick.checked=selectedIds.includes(s.id);pick.onchange=()=>{selectedIds=selectedIds.filter(id=>id!==s.id);if(pick.checked)selectedIds.push(s.id);savePicks();renderList()};el.querySelector('strong').textContent=s.name;el.querySelector('small').textContent=[s.artist,s.key?'Tom '+s.key:'',s.set].filter(Boolean).join(' · ')||'Cifra';el.querySelector('.fav').onclick=()=>{s.favorite=!s.favorite;save()};el.querySelector('.edit').onclick=()=>openModal(s);el.querySelector('.open').onclick=()=>openSong(s.id);el.querySelector('.songinfo').onclick=()=>openSong(s.id);el.querySelector('.delete').onclick=()=>{if(confirm(`Excluir a música ‘${s.name}’? Essa ação não pode ser desfeita.`)){songs=songs.filter(x=>x.id!==s.id);selectedIds=selectedIds.filter(id=>id!==s.id);if(currentId===s.id){currentId=null;stopAuto();$('readerView').classList.add('hidden');$('libraryView').classList.remove('hidden')}savePicks();save()}};root.appendChild(el)});updatePickControls()}
 function openModal(s=null){$('songForm').reset();attachmentPending=null;$('attachmentName').textContent='';$('songId').value=s?.id||'';$('modalTitle').textContent=s?'Editar música':'Adicionar música';$('songName').value=s?.name||'';$('songArtist').value=s?.artist||'';$('songKey').value=s?.key||'';$('songSet').value=s?.set||'';$('songLyrics').value=s?.lyrics||'';if(s?.attachmentName)$('attachmentName').textContent='Anexo existente: '+s.attachmentName;$('songModal').classList.remove('hidden')}
