@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="Seu repertório musical, cifras e rolagem automática offline.">
+<link rel="manifest" href="manifest.json">
+<title>Músico Pro</title>
+<style>
+:root{--bg:#0b1220;--panel:#121d2e;--panel2:#1a2940;--text:#f4f7fb;--muted:#a9b8cc;--line:#2b3a50;--accent:#59a7ff;--good:#7ce0b0}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{padding-bottom:env(safe-area-inset-bottom)}button,input,textarea,select{font:inherit}button{border:0;cursor:pointer;color:inherit}.app{max-width:900px;margin:auto;min-height:100dvh;display:flex;flex-direction:column}.top{padding:18px 16px 12px;background:linear-gradient(140deg,#132640,#101827);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:#1d5ca8;font-size:24px}.brand h1{font-size:20px;margin:0;letter-spacing:.2px}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}.status{margin-left:auto;color:var(--good);font-size:11px;white-space:nowrap}.main{padding:16px;flex:1}.searchrow{display:flex;gap:8px;margin-bottom:14px}.field{background:#0b1422;border:1px solid var(--line);border-radius:12px;color:var(--text);padding:12px;width:100%;outline:none}.field:focus{border-color:var(--accent)}.btn{background:var(--panel2);border:1px solid var(--line);padding:11px 13px;border-radius:12px;font-weight:650}.btn.primary{background:#1f6fcb;border-color:#1f6fcb}.btn.ghost{background:transparent}.btn.small{padding:8px 10px;font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}.sectionhead{display:flex;align-items:center;justify-content:space-between;margin:12px 0}.sectionhead h2{font-size:16px;margin:0}.muted{color:var(--muted)}.songlist{display:grid;gap:8px}.song{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}.songicon{width:42px;height:42px;border-radius:12px;background:#203957;display:grid;place-items:center;font-size:20px;flex-shrink:0}.songinfo{min-width:0;flex:1}.songinfo strong{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.songinfo small{display:block;color:var(--muted);margin-top:3px}.iconbtn{background:transparent;color:var(--muted);padding:8px;border-radius:8px;font-size:18px}.empty{padding:32px 16px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--muted)}.empty b{display:block;color:var(--text);margin-bottom:7px}.hidden{display:none!important}.readerhead{display:flex;align-items:center;gap:8px;margin-bottom:12px}.readerhead h2{font-size:18px;margin:0;flex:1}.reader-tools{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}.reader-tools .btn{padding:9px 10px}.reader-meta{font-size:12px;color:var(--muted);margin:3px 0 12px}.scrollbox{height:calc(100dvh - 265px);min-height:300px;overflow-y:auto;overscroll-behavior:contain;background:#f9fbff;color:#152238;border-radius:14px;padding:20px 18px;white-space:pre-wrap;font-size:20px;line-height:1.8;touch-action:pan-y;scrollbar-width:thin}.scrollbox .chord{color:#0b69bf;font-weight:800}.readerfoot{display:flex;gap:8px;margin-top:10px}.readerfoot .btn{flex:1}.pill{display:inline-flex;background:#1c3048;border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px;color:#dceaff}.modal{position:fixed;inset:0;background:#0009;display:flex;align-items:flex-end;justify-content:center;z-index:10;padding:12px}.modalbox{background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 14px 14px;padding:18px;width:min(100%,600px);max-height:90dvh;overflow:auto}.modalbox h2{margin:0 0 14px;font-size:19px}.formgrid{display:grid;gap:10px}.formgrid label{font-size:12px;color:var(--muted);display:grid;gap:5px}.formrow{display:flex;gap:8px}.formrow>*{min-width:0;flex:1}.formbuttons{display:flex;gap:8px;margin-top:14px}.formbuttons>*{flex:1}.note{font-size:12px;color:var(--muted);line-height:1.5;margin:12px 0 0}.filelabel{display:inline-flex;align-items:center;justify-content:center;gap:6px}.filelabel input{display:none}.footer{padding:12px 16px 18px;text-align:center;color:#7789a3;font-size:11px}.progress{height:3px;background:#23344a;margin-top:12px;border-radius:9px;overflow:hidden}.progress span{display:block;height:100%;width:0;background:var(--accent)}@media(min-width:700px){.main{padding:22px}.modal{align-items:center}.scrollbox{height:calc(100dvh - 300px);font-size:22px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><div class="brand"><div class="logo">🎸</div><div><h1>Músico Pro</h1><p>Teu repertório na palma da mão</p></div><div class="status" id="saveStatus">● Salvo no aparelho</div></div><div class="progress"><span id="progressBar"></span></div></header>
+<main class="main">
+<section id="libraryView">
+<div class="searchrow"><input id="search" class="field" placeholder="Buscar música ou artista…" autocomplete="off"><button class="btn" id="backupBtn" title="Exportar backup">Backup</button></div>
+<div class="actions"><button class="btn primary" id="addBtn">＋ Adicionar música</button><label class="btn filelabel">⇧ Importar arquivo<input type="file" id="importFile" accept=".txt,.pro,.cho,.chordpro,.pdf,.mp3,.m4a,.wav,.ogg,.json" multiple></label></div>
+<div class="sectionhead"><h2>Meu repertório</h2><span class="pill" id="songCount">0 músicas</span></div>
+<div class="songlist" id="songList"></div>
+<div class="note">Os dados ficam salvos neste aparelho. A sincronização na nuvem será conectada numa próxima etapa. Faça backups para proteger seu repertório.</div>
+</section>
+<section id="readerView" class="hidden">
+<div class="readerhead"><button class="btn small" id="backBtn">← Voltar</button><h2 id="readerTitle">Cifra</h2><button class="iconbtn" id="favoriteBtn" title="Favoritar">☆</button></div>
+<div class="reader-meta" id="readerMeta"></div>
+<div class="reader-tools">
+<button class="btn small" id="autoBtn">▶ Rolagem automática</button>
+<button class="btn small" id="slowerBtn">− Velocidade</button><span class="pill" id="speedLabel">1×</span><button class="btn small" id="fasterBtn">＋ Velocidade</button>
+<button class="btn small" id="fontDown">A−</button><button class="btn small" id="fontUp">A＋</button>
+<button class="btn small" id="transposeDown">Tom −</button><button class="btn small" id="transposeUp">Tom ＋</button>
+</div>
+<div id="scrollBox" class="scrollbox" tabindex="0"></div>
+<div class="readerfoot"><button class="btn" id="prevBtn">‹ Anterior</button><button class="btn" id="nextBtn">Próxima ›</button></div>
+<div class="note">Dica: a rolagem automática para quando chega ao fim. Podes continuar rolando com o dedo a qualquer momento.</div>
+</section>
+</main>
+<footer class="footer">Músico Pro · versão inicial offline</footer>
+</div>
+<div class="modal hidden" id="songModal"><div class="modalbox"><h2 id="modalTitle">Adicionar música</h2><form id="songForm" class="formgrid">
+<input type="hidden" id="songId">
+<label>Nome da música<input class="field" id="songName" required placeholder="Ex.: Ainda ontem chorei de saudade"></label>
+<div class="formrow"><label>Artista<input class="field" id="songArtist" placeholder="Nome do artista"></label><label>Tom<input class="field" id="songKey" placeholder="Ex.: G, Am, F"></label></div>
+<label>Repertório / estilo<input class="field" id="songSet" placeholder="Ex.: Pagode, acústico, show de sábado"></label>
+<label>Letra e cifras<textarea class="field" id="songLyrics" rows="9" placeholder="Cole aqui a letra e os acordes…"></textarea></label>
+<label class="filelabel btn">＋ Anexar PDF ou áudio<input type="file" id="songAttachment" accept=".pdf,.mp3,.m4a,.wav,.ogg,.txt,.pro,.cho,.chordpro"></label><div id="attachmentName" class="muted"></div>
+<div class="formbuttons"><button type="button" class="btn" id="cancelModal">Cancelar</button><button type="submit" class="btn primary">Salvar música</button></div>
+</form></div></div>
+<script>
+const $=id=>document.getElementById(id);
+const DBKEY='musicopro.songs.v1';
+let songs=[], currentId=null, autoTimer=null, speed=1, fontSize=20, transpose=0, attachmentPending=null;
+const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const FLAT={'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
+function load(){try{songs=JSON.parse(localStorage.getItem(DBKEY)||'[]')}catch(e){songs=[]}renderList()}
+function save(){try{localStorage.setItem(DBKEY,JSON.stringify(songs));$('saveStatus').textContent='● Salvo no aparelho';}catch(e){$('saveStatus').textContent='⚠ Armazenamento cheio';alert('O armazenamento do aparelho está cheio. Exporte um backup e remova anexos grandes.')}renderList()}
+function uid(){return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function renderList(){const q=$('search').value.toLowerCase();const list=songs.filter(s=>(s.name+' '+(s.artist||'')+' '+(s.set||'')).toLowerCase().includes(q)).sort((a,b)=>(a.name||'').localeCompare(b.name||''));$('songCount').textContent=`${songs.length} ${songs.length===1?'música':'músicas'}`;const root=$('songList');root.innerHTML='';if(!list.length){root.innerHTML='<div class="empty"><b>Teu repertório começa aqui 🎶</b>Adiciona uma cifra ou importa um arquivo para começar.</div>';return}list.forEach(s=>{const el=document.createElement('div');el.className='song';el.innerHTML=`<div class="songicon">♫</div><div class="songinfo"><strong></strong><small></small></div><button class="iconbtn fav" title="Favoritar">${s.favorite?'★':'☆'}</button><button class="iconbtn edit" title="Editar">✎</button><button class="iconbtn open" title="Abrir cifra">›</button>`;el.querySelector('strong').textContent=s.name;el.querySelector('small').textContent=[s.artist,s.key?'Tom '+s.key:'',s.set].filter(Boolean).join(' · ')||'Cifra';el.querySelector('.fav').onclick=()=>{s.favorite=!s.favorite;save()};el.querySelector('.edit').onclick=()=>openModal(s);el.querySelector('.open').onclick=()=>openSong(s.id);el.querySelector('.songinfo').onclick=()=>openSong(s.id);root.appendChild(el)})}
+function openModal(s=null){$('songForm').reset();attachmentPending=null;$('attachmentName').textContent='';$('songId').value=s?.id||'';$('modalTitle').textContent=s?'Editar música':'Adicionar música';$('songName').value=s?.name||'';$('songArtist').value=s?.artist||'';$('songKey').value=s?.key||'';$('songSet').value=s?.set||'';$('songLyrics').value=s?.lyrics||'';if(s?.attachmentName)$('attachmentName').textContent='Anexo existente: '+s.attachmentName;$('songModal').classList.remove('hidden')}
+function closeModal(){$('songModal').classList.add('hidden')}
+$('addBtn').onclick=()=>openModal();$('cancelModal').onclick=closeModal;$('search').oninput=renderList;
+$('songAttachment').onchange=async e=>{const f=e.target.files[0];if(!f)return; if(f.size>3*1024*1024){alert('Na versão inicial, anexos são limitados a 3 MB para evitar encher o armazenamento. PDFs grandes podem ser abertos externamente.');e.target.value='';return}attachmentPending={name:f.name,type:f.type,data:await fileToDataURL(f)};$('attachmentName').textContent='Pronto para anexar: '+f.name};
+function fileToDataURL(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)})}
+$('songForm').onsubmit=e=>{e.preventDefault();const id=$('songId').value||uid();const old=songs.find(s=>s.id===id);const s={id,name:$('songName').value.trim(),artist:$('songArtist').value.trim(),key:$('songKey').value.trim(),set:$('songSet').value.trim(),lyrics:$('songLyrics').value, favorite:old?.favorite||false,attachmentName:attachmentPending?.name||old?.attachmentName||'',attachmentType:attachmentPending?.type||old?.attachmentType||'',attachmentData:attachmentPending?.data||old?.attachmentData||''};const i=songs.findIndex(x=>x.id===id);if(i>=0)songs[i]=s;else songs.push(s);save();closeModal();};
+function openSong(id){currentId=id;transpose=0;speed=1;fontSize=20;$('libraryView').classList.add('hidden');$('readerView').classList.remove('hidden');renderReader();window.scrollTo(0,0)}
+function current(){return songs.find(s=>s.id===currentId)}
+function renderReader(){const s=current();if(!s)return;$('readerTitle').textContent=s.name;$('readerMeta').textContent=[s.artist,s.key?'Tom original: '+s.key:'',s.set].filter(Boolean).join(' · ');$('favoriteBtn').textContent=s.favorite?'★':'☆';$('scrollBox').style.fontSize=fontSize+'px';$('scrollBox').innerHTML='';if(s.attachmentType==='application/pdf'&&s.attachmentData){const a=document.createElement('a');a.href=s.attachmentData;a.target='_blank';a.textContent='Abrir PDF anexado: '+s.attachmentName;a.className='btn';$('scrollBox').appendChild(a);const p=document.createElement('p');p.textContent='O PDF será aberto em outra aba ou aplicativo. Para rolagem automática de cifras, cole também o texto no campo de letra e cifras.';$('scrollBox').appendChild(p)}if(s.lyrics){const pre=document.createElement('div');pre.innerHTML=renderLyrics(s.lyrics,transpose);$('scrollBox').appendChild(pre)}else if(!s.attachmentData){$('scrollBox').textContent='Ainda não há letra ou cifra nesta música. Toque em editar na lista e cole o conteúdo.'}if(s.attachmentData&&s.attachmentType.startsWith('audio/')){const audio=document.createElement('audio');audio.controls=true;audio.src=s.attachmentData;audio.style.width='100%';$('scrollBox').prepend(audio)}$('speedLabel').textContent=speed.toFixed(1)+'×';$('autoBtn').textContent=autoTimer?'Ⅱ Pausar rolagem':'▶ Rolagem automática';$('scrollBox').scrollTop=0}
+function renderLyrics(txt,shift){return txt.split('\n').map(line=>{const safe=line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');return safe.replace(/\b([A-G](?:#|b)?m?(?:7M|maj7|7M|maj|min|sus|dim|aug|add)?(?:\\d+)?(?:\/[A-G](?:#|b)?)?)\b/g,m=>`<span class="chord">${shift?transposeChord(m,shift):m}</span>`)}).join('\n')}
+function transposeChord(ch,n){return ch.replace(/^([A-G](?:#|b)?)(.*?)(\/[A-G](?:#|b)?)?$/,(_,root,tail,slash)=>{const tr=x=>{if(!x)return '';let base=FLAT[x]||x;let i=NOTES.indexOf(base);if(i<0)return x;return NOTES[(i+n+120)%12]};return tr(root)+tail+(slash?'/'+tr(slash.slice(1)):'')})}
+function stopAuto(){if(autoTimer){cancelAnimationFrame(autoTimer);autoTimer=null} $('autoBtn').textContent='▶ Rolagem automática'}
+function tick(){const box=$('scrollBox');if(!autoTimer)return;box.scrollTop+=speed*.65;if(box.scrollTop+box.clientHeight>=box.scrollHeight-1){stopAuto();return}autoTimer=requestAnimationFrame(tick)}
+$('autoBtn').onclick=()=>{if(autoTimer){stopAuto()}else{autoTimer=requestAnimationFrame(tick);$('autoBtn').textContent='Ⅱ Pausar rolagem'}};
+$('slowerBtn').onclick=()=>{speed=Math.max(.2,Math.round((speed-.2)*10)/10);$('speedLabel').textContent=speed.toFixed(1)+'×'};
+$('fasterBtn').onclick=()=>{speed=Math.min(5,Math.round((speed+.2)*10)/10);$('speedLabel').textContent=speed.toFixed(1)+'×'};
+$('fontDown').onclick=()=>{fontSize=Math.max(14,fontSize-2);$('scrollBox').style.fontSize=fontSize+'px'};
+$('fontUp').onclick=()=>{fontSize=Math.min(36,fontSize+2);$('scrollBox').style.fontSize=fontSize+'px'};
+$('transposeDown').onclick=()=>{transpose--;refreshTranspose()};$('transposeUp').onclick=()=>{transpose++;refreshTranspose()};
+function refreshTranspose(){const s=current();if(!s)return;const box=$('scrollBox');const old=box.scrollTop;const lyrics=box.querySelector('div');if(lyrics)lyrics.innerHTML=renderLyrics(s.lyrics,transpose);box.scrollTop=old;$('readerMeta').textContent=[s.artist,s.key?'Tom original: '+s.key:'',`Transposição: ${transpose>0?'+':''}${transpose} semitons`,s.set].filter(Boolean).join(' · ')}
+$('favoriteBtn').onclick=()=>{const s=current();if(s){s.favorite=!s.favorite;save();$('favoriteBtn').textContent=s.favorite?'★':'☆'}};
+$('backBtn').onclick=()=>{stopAuto();$('readerView').classList.add('hidden');$('libraryView').classList.remove('hidden');renderList()};
+function moveSong(delta){const idx=songs.findIndex(s=>s.id===currentId);const next=songs[idx+delta];if(next){stopAuto();openSong(next.id)}}
+$('prevBtn').onclick=()=>moveSong(-1);$('nextBtn').onclick=()=>moveSong(1);
+$('scrollBox').addEventListener('touchstart',()=>{if(autoTimer)stopAuto()},{passive:true});
+$('backupBtn').onclick=()=>{const blob=new Blob([JSON.stringify({app:'MusicoPro',version:1,songs},null,2)],{type:'application/json'});downloadBlob(blob,'musico-pro-backup.json')};
+function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('importFile').onchange=async e=>{for(const f of e.target.files){if(f.name.toLowerCase().endsWith('.json')){try{const data=JSON.parse(await f.text());const incoming=data.songs||[];for(const s of incoming){if(!songs.some(x=>x.id===s.id))songs.push(s)}save();alert('Backup importado. Músicas novas foram adicionadas sem substituir as existentes.')}catch{alert('Não foi possível ler esse backup JSON.')}}else{const ext=f.name.split('.').pop().toLowerCase();if(['txt','pro','cho','chordpro'].includes(ext)){const lyrics=await f.text();songs.push({id:uid(),name:f.name.replace(/\.[^.]+$/,''),artist:'',key:'',set:'Importado',lyrics,favorite:false});save()}else if(f.size<=3*1024*1024){const data=await fileToDataURL(f);songs.push({id:uid(),name:f.name.replace(/\.[^.]+$/,''),artist:'',key:'',set:'Arquivo importado',lyrics:'',favorite:false,attachmentName:f.name,attachmentType:f.type||'application/octet-stream',attachmentData:data});save()}else alert(f.name+' é maior que 3 MB. Na versão inicial, arquivos grandes precisam ser abertos externamente.')}}e.target.value=''};
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+load();
+</script>
+</body></html>

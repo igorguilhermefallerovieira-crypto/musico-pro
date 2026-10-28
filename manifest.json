@@ -1,0 +1,10 @@
+{
+  "name": "Músico Pro",
+  "short_name": "Músico Pro",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#101827",
+  "description": "Repertório e cifras offline para músicos",
+  "icons": []
+}
